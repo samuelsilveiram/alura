@@ -1,41 +1,39 @@
-angular.module('alurapic').controller('FotoController', function($scope, $http, $routeParams){
-    
-    $scope.foto = {};
-    $scope.mensagem = '';
+angular.module('alurapic')           
+	.controller('FotoController', 
+	
+		['$scope',
+		'cadastroDeFotos',
+		'recursoFoto',
+		'$routeParams', 
+		
+		
+		function($scope, cadastroDeFotos, recursoFoto, $routeParams) {
 
-    var fotoId = $routeParams.fotoId;
+		$scope.foto = {};
+		$scope.mensagem = '';
 
-    if(fotoId){
-        $http.get('v1/fotos/'+fotoId)
-        .success(function(foto){
-            $scope.foto = foto;
-        })
-        .error(function(){
-            $scope.mensagem = 'Ocorreu um erro ao recuperar a foto';
-        });
-    }
-    
+		if($routeParams.fotoId) {
+			recursoFoto.get({fotoId: $routeParams.fotoId}, function(foto) {
+				$scope.foto = foto; 
+			}, function(erro) {
+				console.log(erro);
+				$scope.mensagem = 'Não foi possível obter a foto'
+			});
+		}
 
-    $scope.submeter = function(){
-        if($scope.formulario.$valid){
-            if($scope.foto._id){
-                $http.put('v1/fotos/'+$scope.foto._id, $scope.foto)
-                .success(function(){
-                    $scope.mensagem = 'Foto editada com sucesso';
-                })
-                .error(function(){
-                    $scope.mensagem = 'Ocorreu um erro ao salvar a foto';
-                });
-            }else{
-                $http.post('v1/fotos', $scope.foto)
-                .success(function(){
-                    $scope.foto = {};
-                    $scope.mensagem = 'Foto cadastrada com sucesso';
-                })
-                .error(function(){
-                    $scope.mensagem = 'Ocorreu um erro ao salvar a foto';
-                });
-            }
-        }
-    };
-});
+		$scope.submeter = function() {
+
+			if ($scope.formulario.$valid) {
+
+				cadastroDeFotos.cadastrar($scope.foto)
+				.then(function(dados){
+					$scope.mensagem = dados.mensagem;
+					if(dados.inclusao) $scope.foto = {};
+					//$scope.focado = true;
+				})
+				.catch(function(){
+					$scope.mensagem = dados.mensagem;
+				});
+			}
+		};
+	}]);
